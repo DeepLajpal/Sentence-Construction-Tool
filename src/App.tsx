@@ -1,8 +1,8 @@
-import Home from "./components/ui/home/home";
+import Home from "./components/home";
 
 function App() {
   return (
-    <div className="h-dvh  justify-center flex items-center">
+    <div className="">
       <Home />
     </div>
   );
