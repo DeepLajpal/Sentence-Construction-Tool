@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { MdOutlineArrowForward } from "react-icons/md";
-import { Key } from "lucide-react";
 
 const Testbody = () => {
   const [ansArr, setAnsArr] = useState<string[]>([]);
@@ -44,12 +43,16 @@ const Testbody = () => {
     console.dir(e?.target?.innerHTML);
   };
 
-  const onFieldAnsClick = (ans: string) => {
+  const onFieldAnsClick = (ans: string, index: number) => {
     const copyData: string[] = data ? { ...data } : {};
     let copyAnsArr: string[] = [...ansArr];
+    if (copyAnsArr.length - 1 !== index) {
+      return;
+    }
 
     copyData?.questions[currentQuestionId]?.options?.push(ans);
     copyAnsArr = copyAnsArr.filter((answer) => answer != ans);
+    // copyAnsArr[index] = null;
 
     setAnsArr(copyAnsArr);
     setData(copyData);
@@ -99,6 +102,7 @@ const Testbody = () => {
                     <>
                       {part}{" "}
                       <AnswerField
+                        index={index}
                         onFieldAnsClick={onFieldAnsClick}
                         isFilled={ansArr[index] ? true : false}
                         ans={ansArr[index] ? ansArr[index] : "No Data"}
@@ -150,10 +154,12 @@ const AnswerField = ({
   isFilled,
   ans,
   onFieldAnsClick,
+  index,
 }: {
   isFilled: boolean;
   ans: string;
   onFieldAnsClick: (ans: string) => void;
+  index: number;
 }) => {
   return (
     <>
@@ -165,7 +171,7 @@ const AnswerField = ({
           <Button
             className="cursor-pointer"
             variant="outline"
-            onClick={() => onFieldAnsClick(ans)}
+            onClick={() => onFieldAnsClick(ans, index)}
           >
             {ans ? ans : "Different"}
           </Button>
