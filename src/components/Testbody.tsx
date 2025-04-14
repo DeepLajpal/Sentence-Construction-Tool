@@ -3,14 +3,16 @@ import { Button } from "./ui/button";
 import { MdOutlineArrowForward } from "react-icons/md";
 
 const Testbody = () => {
-  const [ansArr, setAnsArr] = useState<string[]>([]);
+  const [ansArr, setAnsArr] = useState<any>({});
   const [data, setData] = useState<{
     testId: string;
     questions: { question: string; options: string[] }[];
   } | null>(null);
   const [currentQuestionId, setCurrentQuestionId] = useState<number>(0);
   const allQuestionsAnswered: boolean =
-    ansArr.length === data?.questions[currentQuestionId].correctAnswer.length;
+    ansArr[currentQuestionId]?.length ===
+    data?.questions[currentQuestionId].correctAnswer.length;
+
   const getTestPaper = async () => {
     try {
       const response = await (await fetch("http://localhost:3000/data")).json();
@@ -21,7 +23,11 @@ const Testbody = () => {
     }
   };
   const onOptionClick = (index: number, e: Event) => {
-    const copyAnsArr: string[] = [...ansArr];
+    const ansFullData = { ...ansArr };
+    if (!ansFullData[currentQuestionId]) {
+      ansFullData[currentQuestionId] = [];
+    }
+    // const copyAnsArr: string[] = [...ansFullData[currentQuestionId]];
     const copyData: string[] = data ? { ...data } : {};
     const buttonText = e?.target?.innerHTML;
 
@@ -31,20 +37,22 @@ const Testbody = () => {
       return option != buttonText;
     });
 
-    copyAnsArr.push(buttonText);
+    ansFullData[currentQuestionId].push(buttonText);
     setData(copyData);
-    setAnsArr(copyAnsArr);
+    setAnsArr(ansFullData);
   };
 
   const onFieldAnsClick = (ans: string, index: number) => {
     const copyData: string[] = data ? { ...data } : {};
-    let copyAnsArr: string[] = [...ansArr];
-    if (copyAnsArr.length - 1 !== index) {
+    let copyAnsArr: string[] = { ...ansArr };
+    if (copyAnsArr[currentQuestionId].length - 1 !== index) {
       return;
     }
 
     copyData?.questions[currentQuestionId]?.options?.push(ans);
-    copyAnsArr = copyAnsArr.filter((answer) => answer != ans);
+    copyAnsArr[currentQuestionId] = copyAnsArr[currentQuestionId].filter(
+      (answer) => answer != ans
+    );
 
     setAnsArr(copyAnsArr);
     setData(copyData);
@@ -52,10 +60,16 @@ const Testbody = () => {
   const onQuestionChange = () => {
     if (currentQuestionId >= data?.questions.length - 1) return;
     setCurrentQuestionId((prev) => prev + 1);
-    setAnsArr([]);
+    // setAnsArr([]);
   };
+
   useEffect(() => {
     getTestPaper();
+    const tempAnsArr = { ...ansArr };
+    Array(data?.questions.length).map((_, index) => {
+      tempAnsArr[index] = [];
+    });
+    setAnsArr(tempAnsArr);
   }, []);
 
   return (
@@ -104,8 +118,14 @@ const Testbody = () => {
                       <AnswerField
                         index={index}
                         onFieldAnsClick={onFieldAnsClick}
-                        isFilled={ansArr[index] ? true : false}
-                        ans={ansArr[index] ? ansArr[index] : "No Data"}
+                        isFilled={
+                          ansArr[currentQuestionId]?.[index] ? true : false
+                        }
+                        ans={
+                          ansArr[currentQuestionId]?.[index]
+                            ? ansArr[currentQuestionId]?.[index]
+                            : "No Data"
+                        }
                       />
                     </>
                   ) : (
