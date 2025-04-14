@@ -8,9 +8,6 @@ const Testbody = () => {
     testId: string;
     questions: { question: string; options: string[] }[];
   } | null>(null);
-  //   const [currentQuestion, setCurrentQuestion] = useState<{
-  //     options: string[];
-  //   }>();
   const [currentQuestionId, setCurrentQuestionId] = useState<number>(0);
   const allQuestionsAnswered: boolean =
     ansArr.length === data?.questions[currentQuestionId].correctAnswer.length;
@@ -23,10 +20,6 @@ const Testbody = () => {
       console.error("Error Fetching paper: ", error);
     }
   };
-  useEffect(() => {
-    getTestPaper();
-  }, []);
-
   const onOptionClick = (index: number, e: Event) => {
     const copyAnsArr: string[] = [...ansArr];
     const copyData: string[] = data ? { ...data } : {};
@@ -38,11 +31,9 @@ const Testbody = () => {
       return option != buttonText;
     });
 
-    // copyAnsArr[index] = e?.target?.innerHTML;
     copyAnsArr.push(buttonText);
     setData(copyData);
     setAnsArr(copyAnsArr);
-    // console.dir(e?.target?.innerHTML);
   };
 
   const onFieldAnsClick = (ans: string, index: number) => {
@@ -62,8 +53,10 @@ const Testbody = () => {
     if (currentQuestionId >= data?.questions.length - 1) return;
     setCurrentQuestionId((prev) => prev + 1);
     setAnsArr([]);
-    // console.log(currentQuestionId);
   };
+  useEffect(() => {
+    getTestPaper();
+  }, []);
 
   return (
     <div className="h-full w-full flex flex-col justify-between">
