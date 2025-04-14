@@ -12,7 +12,7 @@ const MainCard = ({
   return (
     <div className={className}>
       <div
-        className={`${bgColor} w-full p-[5%] h-2/3 bg-radius rounded-3xl sm:w-2/4 sm:p-[3%]`}
+        className={`${bgColor} w-full p-[5%] h-[95%] bg-radius rounded-3xl sm:w-2/4 sm:p-[3%] sm:h-2/3`}
       >
         {children}
       </div>
