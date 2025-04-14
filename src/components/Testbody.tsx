@@ -4,16 +4,15 @@ import { MdOutlineArrowForward } from "react-icons/md";
 import { Key } from "lucide-react";
 
 const Testbody = () => {
-  const numberOfQuestions = 15;
   const [ansArr, setAnsArr] = useState<string[]>([]);
   const [data, setData] = useState<{
     testId: string;
-    questions: [question: string];
-  }>();
+    questions: { question: string; options: string[] }[];
+  } | null>(null);
   //   const [currentQuestion, setCurrentQuestion] = useState<{
   //     options: string[];
   //   }>();
-  const [currentQuestionId, setCurrentQuestionId] = useState<string>("0");
+  const [currentQuestionId, setCurrentQuestionId] = useState<number>(0);
   const getTestPaper = async () => {
     try {
       const response = await (await fetch("http://localhost:3000/data")).json();
@@ -26,6 +25,35 @@ const Testbody = () => {
   useEffect(() => {
     getTestPaper();
   }, []);
+
+  const onOptionClick = (index: number, e: Event) => {
+    const copyAnsArr: string[] = [...ansArr];
+    const copyData: string[] = data ? { ...data } : {};
+    const buttonText = e?.target?.innerHTML;
+
+    copyData.questions[currentQuestionId].options = copyData?.questions[
+      currentQuestionId
+    ]?.options?.filter((option: string) => {
+      return option != buttonText;
+    });
+
+    // copyAnsArr[index] = e?.target?.innerHTML;
+    copyAnsArr.push(buttonText);
+    setData(copyData);
+    setAnsArr(copyAnsArr);
+    console.dir(e?.target?.innerHTML);
+  };
+
+  const onFieldAnsClick = (ans: string) => {
+    const copyData: string[] = data ? { ...data } : {};
+    let copyAnsArr: string[] = [...ansArr];
+
+    copyData?.questions[currentQuestionId]?.options?.push(ans);
+    copyAnsArr = copyAnsArr.filter((answer) => answer != ans);
+
+    setAnsArr(copyAnsArr);
+    setData(copyData);
+  };
 
   return (
     <div className="h-full w-full flex flex-col justify-between">
@@ -58,9 +86,9 @@ const Testbody = () => {
           Select the missing words in the correct order
         </p>
         <p className="text-xl font-medium leading-[60px] px-[4%]">
-          {data?.questions[0].question
+          {data?.questions[currentQuestionId].question
             .split("_____________")
-            .map((part, index) => {
+            .map((part: string, index: number) => {
               if (part.length === 0) return " .";
               const questionLength =
                 data?.questions[0].question.split("_____________").length - 1;
@@ -71,6 +99,7 @@ const Testbody = () => {
                     <>
                       {part}{" "}
                       <AnswerField
+                        onFieldAnsClick={onFieldAnsClick}
                         isFilled={ansArr[index] ? true : false}
                         ans={ansArr[index] ? ansArr[index] : "No Data"}
                       />
@@ -87,9 +116,20 @@ const Testbody = () => {
           opinions on the final <AnswerField isFilled={false} /> . */}
         </p>
         <div className="grid grid-col-4 grid-flow-col justify-center gap-[3%]">
-          <Button variant="outline" className="w-max">
-            Different
-          </Button>
+          {data?.questions[currentQuestionId].options.map(
+            (value: string, index: number) => {
+              return (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className="cursor-pointer w-max"
+                  onClick={(e) => onOptionClick(index, e)}
+                >
+                  {value}
+                </Button>
+              );
+            }
+          )}
         </div>
       </div>
 
@@ -106,7 +146,15 @@ const Testbody = () => {
   );
 };
 
-const AnswerField = ({ isFilled, ans }: { isFilled: boolean; ans: string }) => {
+const AnswerField = ({
+  isFilled,
+  ans,
+  onFieldAnsClick,
+}: {
+  isFilled: boolean;
+  ans: string;
+  onFieldAnsClick: (ans: string) => void;
+}) => {
   return (
     <>
       {isFilled ? (
@@ -114,7 +162,13 @@ const AnswerField = ({ isFilled, ans }: { isFilled: boolean; ans: string }) => {
           className="px-[1%] border-b border-solid border-black pb-[12px]"
           size="sm"
         >
-          <Button variant="outline">{ans ? ans : "Different"}</Button>
+          <Button
+            className="cursor-pointer"
+            variant="outline"
+            onClick={() => onFieldAnsClick(ans)}
+          >
+            {ans ? ans : "Different"}
+          </Button>
         </span>
       ) : (
         <span className="">_________</span>
