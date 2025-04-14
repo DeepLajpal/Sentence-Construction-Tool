@@ -12,6 +12,8 @@ const Testbody = () => {
   //     options: string[];
   //   }>();
   const [currentQuestionId, setCurrentQuestionId] = useState<number>(0);
+  const allQuestionsAnswered: boolean =
+    ansArr.length === data?.questions[currentQuestionId].correctAnswer.length;
   const getTestPaper = async () => {
     try {
       const response = await (await fetch("http://localhost:3000/data")).json();
@@ -40,7 +42,7 @@ const Testbody = () => {
     copyAnsArr.push(buttonText);
     setData(copyData);
     setAnsArr(copyAnsArr);
-    console.dir(e?.target?.innerHTML);
+    // console.dir(e?.target?.innerHTML);
   };
 
   const onFieldAnsClick = (ans: string, index: number) => {
@@ -52,10 +54,15 @@ const Testbody = () => {
 
     copyData?.questions[currentQuestionId]?.options?.push(ans);
     copyAnsArr = copyAnsArr.filter((answer) => answer != ans);
-    // copyAnsArr[index] = null;
 
     setAnsArr(copyAnsArr);
     setData(copyData);
+  };
+  const onQuestionChange = () => {
+    if (currentQuestionId >= data?.questions.length - 1) return;
+    setCurrentQuestionId((prev) => prev + 1);
+    setAnsArr([]);
+    // console.log(currentQuestionId);
   };
 
   return (
@@ -141,9 +148,15 @@ const Testbody = () => {
         <Button
           variant="outline"
           size="lg"
-          className="cursor-pointer border-solid border-black-800 p-[3%] text-black-800"
+          className={`cursor-pointer border-solid border-black-800 p-[3%] text-black ${
+            allQuestionsAnswered
+              ? "bg-[#453FE1] text-white hover:bg-[#453FE1] hover:text-white"
+              : ""
+          }`}
+          onClick={onQuestionChange}
+          disabled={!allQuestionsAnswered}
         >
-          <MdOutlineArrowForward className="text-black-800" />
+          <MdOutlineArrowForward className="" />
         </Button>
       </div>
     </div>
