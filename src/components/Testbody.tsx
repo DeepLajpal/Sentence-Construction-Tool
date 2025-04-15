@@ -67,10 +67,10 @@ const Testbody = () => {
 
   useEffect(() => {
     const localIntervalId = setInterval(() => {
-      console.log(timer);
       if (timer >= 30) return clearInterval(intervalId.current);
       setTimer((prev) => prev + 1);
     }, 1000);
+
     intervalId.current = localIntervalId;
     return () => {
       clearInterval(localIntervalId);
@@ -115,11 +115,11 @@ const Testbody = () => {
         </div>
       </div>
 
-      <div className="grid justify-center items-center gap-[10%]">
+      <div className="grid justify-center items-center">
         <p className="text-lg opacity-75 font-medium text-center">
           Select the missing words in the correct order
         </p>
-        <p className="text-xl font-medium leading-[60px] px-[4%]">
+        <p className="text-xl font-medium leading-[60px] px-[4%] py-[3%]">
           {data?.questions[currentQuestionId].question
             .split("_____________")
             .map((part: string, index: number) => {
