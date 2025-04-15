@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { MdOutlineArrowForward } from "react-icons/md";
 
+type timerType = {
+  [key: string]: number;
+};
 const Testbody = () => {
   const [ansArr, setAnsArr] = useState<any>({});
   const [data, setData] = useState<{
@@ -13,7 +16,7 @@ const Testbody = () => {
     ansArr[currentQuestionId]?.length ===
     data?.questions[currentQuestionId]?.correctAnswer.length;
   const timerSeconds: number = 3;
-  const [timer, setTimer] = useState<number>(timerSeconds);
+  const [timer, setTimer] = useState<timerType | null>(null);
   const intervalId = useRef<NodeJS.Timeout | null>(null);
 
   const getTestPaper = async () => {
@@ -65,32 +68,32 @@ const Testbody = () => {
       return clearInterval(intervalId.current);
     }
     setCurrentQuestionId(currentQuestionId + 1);
-    console.log("Question changed to:", currentQuestionId + 1);
   };
 
   useEffect(() => {
-    setTimer(timerSeconds); // Reset timer when question changes
+    const localTimer = { ...timer };
+    localTimer[currentQuestionId] = timerSeconds;
+    setTimer(localTimer); // Reset timer when question changes
 
     const localIntervalId = setInterval(() => {
-      if (currentQuestionId >= data?.questions?.length - 1) {
+      if (currentQuestionId > data?.questions?.length - 1) {
         clearInterval(localIntervalId);
         return;
       }
 
       setTimer((prev) => {
-        if (prev <= 0) {
+        const newTimer = { ...prev };
+        if (newTimer[currentQuestionId] <= 0) {
+          newTimer[currentQuestionId] = timerSeconds;
           clearInterval(localIntervalId);
 
           if (currentQuestionId < data?.questions.length - 1) {
             setCurrentQuestionId(currentQuestionId + 1);
-            console.log(
-              "Timer expired, moving to question:",
-              currentQuestionId + 1
-            );
           }
-          return prev;
+          return newTimer;
         }
-        return prev - 1;
+        newTimer[currentQuestionId] = newTimer[currentQuestionId] - 1;
+        return newTimer;
       });
     }, 1000);
 
@@ -102,11 +105,14 @@ const Testbody = () => {
 
   useEffect(() => {
     getTestPaper();
-    const tempAnsArr = { ...ansArr };
+    const tempAns = { ...ansArr };
+    const tempTimer = { ...timer };
     Array(data?.questions.length).map((_, index) => {
-      tempAnsArr[index] = [];
+      tempAns[index] = [];
+      tempTimer[index] = timerSeconds;
     });
-    setAnsArr(tempAnsArr);
+    setAnsArr(tempAns);
+    setTimer(tempTimer);
   }, []);
 
   return (
@@ -114,26 +120,47 @@ const Testbody = () => {
       <div className="flex flex-col h-2/18 w-full justify-between">
         <div className="flex justify-between item-top">
           <p className="font-medium text-lg opacity-75">
-            0:{String(timer).padStart(2, "0")}
+            0:{timer && String(timer[currentQuestionId]).padStart(2, "0")}
           </p>
           <Button variant="outline" className="cursor-pointer">
             Quit
           </Button>
         </div>
 
-        <div
-          className={`grid grid-cols-${data?.questions?.length} grid-flow-col w-full justify-items-center`}
-        >
-          {Array(data?.questions?.length)
-            .fill(0)
-            ?.map((_, index) => {
-              return (
+        {/* Replace the dynamic grid with a fixed flex layout */}
+        <div className="flex w-full justify-between gap-1 mt-2">
+          {data?.questions?.map((_, index) => {
+            // Calculate if this bar is active, completed, or upcoming
+            const isActive = index === currentQuestionId;
+            const isCompleted = index <= currentQuestionId;
+
+            return (
+              <div
+                key={index}
+                className="bg-[#b7b7b7] bg-opacity-75 h-[5px] rounded-[10px] flex-1"
+              >
                 <div
-                  key={index}
-                  className="bg-[#F2A531] w-[95%] h-[5px] rounded-[10px]"
+                  className={`${
+                    isActive
+                      ? "bg-[#F2A531]"
+                      : isCompleted
+                      ? "bg-[#F2A531]"
+                      : "bg-transparent"
+                  } transition-all duration-1000 ease-linear h-[5px] rounded-[10px]`}
+                  style={{
+                    width: isCompleted
+                      ? "100%"
+                      : isActive
+                      ? `${
+                          100 -
+                          (timer?.[currentQuestionId] / timerSeconds) * 100
+                        }%`
+                      : "0%",
+                  }}
                 ></div>
-              );
-            })}
+              </div>
+            );
+          })}
         </div>
       </div>
 
