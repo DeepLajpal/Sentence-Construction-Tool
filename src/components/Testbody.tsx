@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { MdOutlineArrowForward } from "react-icons/md";
 
@@ -12,6 +12,8 @@ const Testbody = () => {
   const allQuestionsAnswered: boolean =
     ansArr[currentQuestionId]?.length ===
     data?.questions[currentQuestionId].correctAnswer.length;
+  const [timer, setTimer] = useState<number>(0);
+  const intervalId = useRef<NodeJS.Timeout | null>(null);
 
   const getTestPaper = async () => {
     try {
@@ -64,6 +66,19 @@ const Testbody = () => {
   };
 
   useEffect(() => {
+    const localIntervalId = setInterval(() => {
+      console.log(timer);
+      if (timer >= 30) return clearInterval(intervalId.current);
+      setTimer((prev) => prev + 1);
+    }, 1000);
+    intervalId.current = localIntervalId;
+    return () => {
+      clearInterval(localIntervalId);
+      setTimer(0);
+    };
+  }, [currentQuestionId]);
+
+  useEffect(() => {
     getTestPaper();
     const tempAnsArr = { ...ansArr };
     Array(data?.questions.length).map((_, index) => {
@@ -76,7 +91,9 @@ const Testbody = () => {
     <div className="h-full w-full flex flex-col justify-between">
       <div className="flex flex-col h-2/18 w-full justify-between">
         <div className="flex justify-between item-top">
-          <p className="font-medium text-lg opacity-75">0:15</p>
+          <p className="font-medium text-lg opacity-75">
+            0:{String(timer).padStart(2, "0")}
+          </p>
           <Button variant="outline" className="cursor-pointer">
             Quit
           </Button>
@@ -139,21 +156,23 @@ const Testbody = () => {
           into an argument because everyone had <AnswerField isFilled={false} />{" "}
           opinions on the final <AnswerField isFilled={false} /> . */}
         </p>
-        <div className="grid grid-col-4 grid-flow-col justify-center gap-[3%]">
-          {data?.questions[currentQuestionId].options.map(
-            (value: string, index: number) => {
-              return (
-                <Button
-                  key={index}
-                  variant="outline"
-                  className="cursor-pointer w-max"
-                  onClick={(e) => onOptionClick(index, e)}
-                >
-                  {value}
-                </Button>
-              );
-            }
-          )}
+        <div className="px-4">
+          <div className="grid justify-center [grid-template-columns:repeat(auto-fit,minmax(120px,max-content))] justify-items-center">
+            {data?.questions[currentQuestionId].options.map(
+              (value: string, index: number) => {
+                return (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    className="cursor-pointer w-max"
+                    onClick={(e) => onOptionClick(index, e)}
+                  >
+                    {value}
+                  </Button>
+                );
+              }
+            )}
+          </div>
         </div>
       </div>
 
