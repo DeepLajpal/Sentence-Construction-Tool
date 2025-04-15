@@ -11,8 +11,9 @@ const Testbody = () => {
   const [currentQuestionId, setCurrentQuestionId] = useState<number>(0);
   const allQuestionsAnswered: boolean =
     ansArr[currentQuestionId]?.length ===
-    data?.questions[currentQuestionId].correctAnswer.length;
-  const [timer, setTimer] = useState<number>(0);
+    data?.questions[currentQuestionId]?.correctAnswer.length;
+  const timerSeconds: number = 3;
+  const [timer, setTimer] = useState<number>(timerSeconds);
   const intervalId = useRef<NodeJS.Timeout | null>(null);
 
   const getTestPaper = async () => {
@@ -60,23 +61,45 @@ const Testbody = () => {
     setData(copyData);
   };
   const onQuestionChange = () => {
-    if (currentQuestionId >= data?.questions.length - 1) return;
-    setCurrentQuestionId((prev) => prev + 1);
-    // setAnsArr([]);
+    if (currentQuestionId >= data?.questions.length - 1) {
+      return clearInterval(intervalId.current);
+    }
+    setCurrentQuestionId(currentQuestionId + 1);
+    console.log("Question changed to:", currentQuestionId + 1);
   };
 
   useEffect(() => {
+    setTimer(timerSeconds); // Reset timer when question changes
+
     const localIntervalId = setInterval(() => {
-      if (timer >= 30) return clearInterval(intervalId.current);
-      setTimer((prev) => prev + 1);
+      if (currentQuestionId >= data?.questions?.length - 1) {
+        clearInterval(localIntervalId);
+        return;
+      }
+
+      setTimer((prev) => {
+        if (prev <= 0) {
+          clearInterval(localIntervalId);
+
+          if (currentQuestionId < data?.questions.length - 1) {
+            setCurrentQuestionId(currentQuestionId + 1);
+            console.log(
+              "Timer expired, moving to question:",
+              currentQuestionId + 1
+            );
+          }
+          return prev;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     intervalId.current = localIntervalId;
     return () => {
       clearInterval(localIntervalId);
-      setTimer(0);
+      setTimer(timerSeconds);
     };
-  }, [currentQuestionId]);
+  }, [currentQuestionId, data?.questions?.length, timerSeconds]);
 
   useEffect(() => {
     getTestPaper();
@@ -120,12 +143,12 @@ const Testbody = () => {
           Select the missing words in the correct order
         </p>
         <p className="text-xl font-medium leading-[60px] px-[4%] py-[3%]">
-          {data?.questions[currentQuestionId].question
+          {data?.questions[currentQuestionId]?.question
             .split("_____________")
             .map((part: string, index: number) => {
               if (part.length === 0) return " .";
               const questionLength =
-                data?.questions[0].question.split("_____________").length - 1;
+                data?.questions[0]?.question.split("_____________").length - 1;
 
               return (
                 <span key={index}>
@@ -158,7 +181,7 @@ const Testbody = () => {
         </p>
         <div className="px-4">
           <div className="grid justify-center [grid-template-columns:repeat(auto-fit,minmax(120px,max-content))] justify-items-center">
-            {data?.questions[currentQuestionId].options.map(
+            {data?.questions[currentQuestionId]?.options.map(
               (value: string, index: number) => {
                 return (
                   <Button
