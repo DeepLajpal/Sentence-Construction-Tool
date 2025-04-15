@@ -97,7 +97,6 @@ const Testbody = () => {
     intervalId.current = localIntervalId;
     return () => {
       clearInterval(localIntervalId);
-      setTimer(timerSeconds);
     };
   }, [currentQuestionId, data?.questions?.length, timerSeconds]);
 
